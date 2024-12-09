@@ -1,9 +1,10 @@
 from aiogram import types
 from database import get_session
-from models import User
+from models import User, Order
+from keyboards.user_keyboard import get_user_keyboard
 
 
-async def order_history(message: types.Message):
+async def show_history(message: types.Message):
     session = get_session()
 
     try:
@@ -13,14 +14,14 @@ async def order_history(message: types.Message):
             await message.answer("Вы не зарегистрированы.")
             return
 
-        orders = session.query(order_history()).filter_by(user_id=user.id).all()
+        orders = session.query(Order).filter_by(user_id=user.id).all()
 
         if not orders:
-            await message.answer("У вас нет заказов.")
+            await message.answer("У вас нет заказов.", reply_markup=get_user_keyboard())
             return
 
         history_list = "\n".join([f"{order.id}. {order.item_name} - {order.status}" for order in orders])
-        await message.answer(f"Ваша история заказов:\n{history_list}")
+        await message.answer(f"Ваша история заказов:\n{history_list}", reply_markup=get_user_keyboard())
 
     except Exception as e:
         await message.answer("Произошла ошибка при получении истории заказов. Попробуйте еще раз.")

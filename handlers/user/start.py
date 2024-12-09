@@ -1,6 +1,7 @@
 from aiogram import types
 from database import get_session
 from models import User
+from keyboards.user_keyboard import get_user_keyboard
 
 
 async def start_command(message: types.Message):
@@ -19,9 +20,9 @@ async def register_user(message: types.Message):
             user = User(phone_number=phone_number)
             session.add(user)
             session.commit()
-            await message.answer("Вы успешно зарегистрированы!")
+            await message.answer("Вы успешно зарегистрированы!", reply_markup=get_user_keyboard())
         else:
-            await message.answer("Вы уже зарегистрированы!")
+            await message.answer("Вы уже зарегистрированы!", reply_markup=get_user_keyboard())
     except Exception as e:
         await message.answer("Произошла ошибка при регистрации. Попробуйте еще раз.")
         print(e)

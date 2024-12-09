@@ -3,11 +3,17 @@ from aiogram import types
 from database import get_session
 from models import User, Order
 from datetime import datetime
+from keyboards.user_keyboard import get_user_keyboard
 
 logging.basicConfig(level=logging.INFO)
 
 
 async def place_order(message: types.Message):
+    # Проверяем, что сообщение содержит только цифры
+    if not message.text.isdigit():
+        await message.answer("Пожалуйста, введите номер товара.", reply_markup=get_user_keyboard())
+        return
+
     item_number = int(message.text.strip())
 
     session = get_session()
@@ -21,12 +27,12 @@ async def place_order(message: types.Message):
             order = Order(user_id=user.id, item_name=items[item_number], delivery_time=datetime.now(), status='pending')
             session.add(order)
             session.commit()
-            await message.answer(f"Ваш заказ на {items[item_number]} оформлен!")
+            await message.answer(f"Ваш заказ на {items[item_number]} оформлен!", reply_markup=get_user_keyboard())
         else:
-            await message.answer("Неверный номер товара.")
+            await message.answer("Неверный номер товара.", reply_markup=get_user_keyboard())
     except Exception as e:
         await message.answer("Произошла ошибка при оформлении заказа. Попробуйте еще раз.")
-        print(e)
+        logging.error(f"Ошибка при оформлении заказа: {e}")
     finally:
         session.close()
 
@@ -48,11 +54,11 @@ async def repeat_last_order(message: types.Message):
                               status='pending')
             session.add(new_order)
             session.commit()
-            await message.answer(f"Ваш заказ на {last_order.item_name} повторен!")
+            await message.answer(f"Ваш заказ на {last_order.item_name} повторен!", reply_markup=get_user_keyboard())
         else:
-            await message.answer("У вас нет завершенных заказов для повторения.")
+            await message.answer("У вас нет завершенных заказов для повторения.", reply_markup=get_user_keyboard())
     except Exception as e:
         await message.answer("Произошла ошибка при повторении заказа. Попробуйте еще раз.")
-        print(e)
+        logging.error(f"Ошибка при повторении заказа: {e}")
     finally:
         session.close()
